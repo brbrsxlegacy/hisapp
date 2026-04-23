@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VideoTube Firebase</title>
+  <style>
+    :root{
+      --bg:#0f0f0f;
+      --card:#181818;
+      --card2:#202020;
+      --line:rgba(255,255,255,.08);
+      --text:#f5f5f5;
+      --muted:#aaaaaa;
+      --red:#ff2d55;
+      --green:#00c853;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .topbar{
+      position:sticky; top:0; z-index:20;
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      padding:14px 16px;
+      background:rgba(15,15,15,.95);
+      border-bottom:1px solid var(--line);
+      backdrop-filter:blur(10px);
+    }
+    .brand{display:flex; gap:10px; align-items:center; font-weight:700}
+    .logo{
+      width:38px; height:38px; border-radius:12px;
+      background:linear-gradient(135deg,var(--red),orange);
+      display:grid; place-items:center; font-size:18px;
+    }
+    .search{
+      flex:1; max-width:700px; display:flex; gap:10px;
+    }
+    .search input,.input,.textarea{
+      width:100%;
+      background:#111;
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px 14px;
+      outline:none;
+    }
+    .textarea{min-height:110px; resize:vertical}
+    .btn{
+      background:var(--card2);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px 14px;
+      cursor:pointer;
+    }
+    .btn.red{background:var(--red); border-color:transparent}
+    .btn.green{background:var(--green); border-color:transparent}
+    .layout{
+      display:grid;
+      grid-template-columns:230px 1fr;
+      min-height:calc(100vh - 67px);
+    }
+    .sidebar{
+      border-right:1px solid var(--line);
+      padding:16px;
+    }
+    .nav-btn{
+      width:100%;
+      text-align:left;
+      background:transparent;
+      color:var(--text);
+      border:1px solid transparent;
+      border-radius:12px;
+      padding:13px;
+      margin-bottom:8px;
+      cursor:pointer;
+    }
+    .nav-btn.active,.nav-btn:hover{background:var(--card); border-color:var(--line)}
+    .content{padding:20px}
+    .page{display:none}
+    .page.active{display:block}
+    .section-title{font-size:28px; font-weight:800; margin:0 0 16px}
+    .panel{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+      gap:16px;
+    }
+    .video-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      cursor:pointer;
+    }
+    .thumb{
+      width:100%;
+      aspect-ratio:16/9;
+      object-fit:cover;
+      background:#111;
+      display:block;
+    }
+    .video-info{
+      display:grid;
+      grid-template-columns:48px 1fr;
+      gap:12px;
+      padding:14px;
+    }
+    .avatar{
+      width:48px; height:48px; border-radius:50%; object-fit:cover; background:#333;
+      border:2px solid rgba(255,255,255,.08);
+    }
+    .title{font-weight:700; line-height:1.35; margin-bottom:6px}
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .hero{
+      display:grid;
+      grid-template-columns:100px 1fr auto;
+      gap:16px;
+      align-items:center;
+    }
+    .big-avatar{
+      width:100px; height:100px; border-radius:50%; object-fit:cover; background:#333;
+    }
+    .watch-layout{
+      display:grid;
+      grid-template-columns:minmax(0,1.6fr) 330px;
+      gap:18px;
+    }
+    video{
+      width:100%;
+      background:#000;
+      border-radius:16px;
+    }
+    .comment{
+      display:grid;
+      grid-template-columns:42px 1fr;
+      gap:10px;
+      background:#131313;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      margin-top:10px;
+    }
+    .mini{
+      display:grid;
+      grid-template-columns:130px 1fr;
+      gap:10px;
+      cursor:pointer;
+      margin-bottom:12px;
+    }
+    .mini img{
+      width:100%;
+      aspect-ratio:16/9;
+      object-fit:cover;
+      border-radius:12px;
+      background:#111;
+    }
+    .progress{
+      width:100%; height:12px; background:#111; border:1px solid var(--line);
+      border-radius:999px; overflow:hidden;
+    }
+    .bar{
+      width:0%; height:100%; background:linear-gradient(90deg,var(--red),orange);
+      transition:.15s linear;
+    }
+    .empty{
+      padding:24px;
+      background:var(--card);
+      border:1px dashed var(--line);
+      border-radius:18px;
+      color:var(--muted);
+    }
+    .top-user{
+      display:flex; gap:10px; align-items:center;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px 6px 6px;
+    }
+    .top-user img{width:38px; height:38px; border-radius:50%; object-fit:cover; background:#333}
+    @media (max-width: 980px){
+      .layout{grid-template-columns:1fr}
+      .sidebar{border-right:0; border-bottom:1px solid var(--line)}
+      .watch-layout,.hero{grid-template-columns:1fr}
+    }
+    @media (max-width: 760px){
+      .topbar{flex-wrap:wrap}
+      .search{order:3; width:100%; max-width:none}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">▶</div>
+      <div>VideoTube</div>
+    </div>
+
+    <div class="search">
+      <input id="searchInput" type="text" placeholder="Video veya kanal ara..." />
+      <button class="btn" id="searchBtn">Ara</button>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button class="btn red" id="openUploadTop">Yükle</button>
+      <div class="top-user">
+        <img id="topAvatar" src="https://placehold.co/100x100/2b2b2b/ffffff?text=U" alt="">
+        <div>
+          <div id="topName" style="font-weight:700;">Yükleniyor...</div>
+          <div class="small muted" id="topUid">uid...</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <button class="nav-btn active" data-page="homePage">🏠 Ana Sayfa</button>
+      <button class="nav-btn" data-page="allVideosPage">🎬 Tüm Videolar</button>
+      <button class="nav-btn" data-page="channelsPage">📺 Kanallar</button>
+      <button class="nav-btn" data-page="uploadPage">⤴ Video Yükle</button>
+      <button class="nav-btn" data-page="profilePage">👤 Profilim</button>
+      <button class="nav-btn" data-page="watchPage">▶ Oynatıcı</button>
+      <button class="nav-btn hidden" data-page="channelPage" id="channelNavBtn">📡 Kanal</button>
+
+      <div class="panel" style="margin-top:14px;">
+        <div style="font-weight:700; margin-bottom:8px;">Durum</div>
+        <div class="small muted" id="statusText">Firebase bağlanıyor...</div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="page active" id="homePage">
+        <h1 class="section-title">Ana Sayfa</h1>
+        <div class="panel" style="margin-bottom:16px;">
+          Video yükle, izle, yorum at, like at, kanal aç. Hepsi Firebase ile çalışır.
+        </div>
+
+        <h2>Yeni Videolar</h2>
+        <div class="grid" id="homeVideos"></div>
+
+        <h2 style="margin-top:24px;">Kanallar</h2>
+        <div class="grid" id="homeChannels"></div>
+      </section>
+
+      <section class="page" id="allVideosPage">
+        <h1 class="section-title">Tüm Videolar</h1>
+        <div class="grid" id="allVideosGrid"></div>
+      </section>
+
+      <section class="page" id="channelsPage">
+        <h1 class="section-title">Kanallar</h1>
+        <div class="grid" id="channelsGrid"></div>
+      </section>
+
+      <section class="page" id="uploadPage">
+        <h1 class="section-title">Video Yükle</h1>
+        <div class="panel">
+          <div style="display:grid; gap:12px;">
+            <input class="input" id="videoTitle" placeholder="Video başlığı">
+            <textarea class="textarea" id="videoDesc" placeholder="Açıklama"></textarea>
+            <input class="input" id="videoTags" placeholder="Etiketler: oyun, komik, shorts">
+            <div>
+              <div class="small muted" style="margin-bottom:8px;">Thumbnail</div>
+              <input id="thumbFile" type="file" accept="image/*">
+              <img id="thumbPreview" class="thumb hidden" style="max-width:340px; margin-top:10px;" alt="">
+            </div>
+            <div>
+              <div class="small muted" style="margin-bottom:8px;">Video dosyası</div>
+              <input id="videoFile" type="file" accept="video/*">
+            </div>
+            <div class="progress"><div class="bar" id="uploadBar"></div></div>
+            <div class="small muted" id="uploadStatus">Henüz yükleme başlamadı.</div>
+            <button class="btn red" id="uploadBtn">Videoyu yükle</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="profilePage">
+        <h1 class="section-title">Profilim</h1>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;" id="profileCols">
+          <div class="panel">
+            <h3 style="margin-top:0;">Kanal Bilgileri</h3>
+            <div style="display:grid; gap:12px;">
+              <input class="input" id="profileName" placeholder="Kanal adı">
+              <textarea class="textarea" id="profileBio" placeholder="Kanal açıklaması"></textarea>
+              <div>
+                <div class="small muted" style="margin-bottom:8px;">Profil resmi</div>
+                <input id="avatarFile" type="file" accept="image/*">
+              </div>
+              <button class="btn green" id="saveProfileBtn">Profili kaydet</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-top:0;">Önizleme</h3>
+            <div class="row" style="align-items:center;">
+              <img id="profilePreviewAvatar" class="big-avatar" src="https://placehold.co/200x200/2b2b2b/ffffff?text=U" alt="">
+              <div>
+                <div id="profilePreviewName" style="font-size:24px; font-weight:800;">Kanal Adı</div>
+                <div id="profilePreviewBio" class="muted">Açıklama yok.</div>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:14px;">
+              <div class="panel" style="padding:12px; min-width:120px;">
+                <div class="small muted">Videolar</div>
+                <div id="myVideoCount" style="font-size:24px; font-weight:800;">0</div>
+              </div>
+              <div class="panel" style="padding:12px; min-width:120px;">
+                <div class="small muted">Toplam Like</div>
+                <div id="myLikeCount" style="font-size:24px; font-weight:800;">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="watchPage">
+        <h1 class="section-title">Video Oynatıcı</h1>
+        <div class="empty" id="watchEmpty">İzlemek için bir video seç.</div>
+
+        <div class="watch-layout hidden" id="watchWrap">
+          <div>
+            <div class="panel">
+              <video id="watchVideo" controls playsinline></video>
+            </div>
+
+            <div class="panel" style="margin-top:16px;">
+              <h2 id="watchTitle" style="margin:0 0 10px;"></h2>
+              <div class="row small muted" style="margin-bottom:10px;">
+                <div id="watchChannel"></div>
+                <div id="watchDate"></div>
+                <div id="watchLikes"></div>
+              </div>
+              <div id="watchDesc" class="muted" style="white-space:pre-wrap;"></div>
+              <div class="row" style="margin-top:14px;">
+                <button class="btn red" id="likeBtn">👍 Like</button>
+                <button class="btn" id="openChannelBtn">📺 Kanala Git</button>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-top:16px;">
+              <h3 style="margin-top:0;">Yorumlar</h3>
+              <textarea class="textarea" id="commentInput" placeholder="Yorum yaz..."></textarea>
+              <button class="btn green" id="sendCommentBtn" style="margin-top:10px;">Yorum Gönder</button>
+              <div id="commentList"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel">
+              <h3 style="margin-top:0;">Diğer Videolar</h3>
+              <div id="sideVideos"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="channelPage">
+        <h1 class="section-title">Kanal</h1>
+        <div class="panel hero" id="channelHero">
+          <img id="channelAvatar" class="big-avatar" src="https://placehold.co/200x200/2b2b2b/ffffff?text=C" alt="">
+          <div>
+            <div id="channelName" style="font-size:28px; font-weight:800;"></div>
+            <div id="channelBio" class="muted" style="margin-top:8px;"></div>
+            <div class="row" style="margin-top:12px;">
+              <div class="small muted">Video: <span id="channelVideoCount">0</span></div>
+              <div class="small muted">Like: <span id="channelLikeCount">0</span></div>
+            </div>
+          </div>
+          <button class="btn" id="backHomeBtn">Geri</button>
+        </div>
+
+        <div class="grid" id="channelVideos" style="margin-top:16px;"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAnalytics, isSupported as analyticsSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+    import {
+      getAuth,
+      signInAnonymously,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      addDoc,
+      collection,
+      query,
+      where,
+      orderBy,
+      serverTimestamp,
+      onSnapshot,
+      updateDoc,
+      increment,
+      getDocs,
+      limit
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getStorage,
+      ref,
+      uploadBytesResumable,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyABqkhpL1SMRzRJ9GQLjjZE2IryqpAvMPw",
+      authDomain: "pixelroom-ae218.firebaseapp.com",
+      databaseURL: "https://pixelroom-ae218-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "pixelroom-ae218",
+      storageBucket: "pixelroom-ae218.firebasestorage.app",
+      messagingSenderId: "720297722320",
+      appId: "1:720297722320:web:c815edae99d1efa7ff39d5",
+      measurementId: "G-HD8901B19M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    analyticsSupported().then(ok => {
+      if (ok) getAnalytics(app);
+    }).catch(() => {});
+
+    const $ = id => document.getElementById(id);
+
+    const els = {
+      statusText: $("statusText"),
+      topAvatar: $("topAvatar"),
+      topName: $("topName"),
+      topUid: $("topUid"),
+
+      homeVideos: $("homeVideos"),
+      allVideosGrid: $("allVideosGrid"),
+      channelsGrid: $("channelsGrid"),
+      homeChannels: $("homeChannels"),
+
+      videoTitle: $("videoTitle"),
+      videoDesc: $("videoDesc"),
+      videoTags: $("videoTags"),
+      thumbFile: $("thumbFile"),
+      videoFile: $("videoFile"),
+      thumbPreview: $("thumbPreview"),
+      uploadBar: $("uploadBar"),
+      uploadStatus: $("uploadStatus"),
+      uploadBtn: $("uploadBtn"),
+
+      profileName: $("profileName"),
+      profileBio: $("profileBio"),
+      avatarFile: $("avatarFile"),
+      saveProfileBtn: $("saveProfileBtn"),
+      profilePreviewAvatar: $("profilePreviewAvatar"),
+      profilePreviewName: $("profilePreviewName"),
+      profilePreviewBio: $("profilePreviewBio"),
+      myVideoCount: $("myVideoCount"),
+      myLikeCount: $("myLikeCount"),
+
+      watchEmpty: $("watchEmpty"),
+      watchWrap: $("watchWrap"),
+      watchVideo: $("watchVideo"),
+      watchTitle: $("watchTitle"),
+      watchChannel: $("watchChannel"),
+      watchDate: $("watchDate"),
+      watchLikes: $("watchLikes"),
+      watchDesc: $("watchDesc"),
+      likeBtn: $("likeBtn"),
+      openChannelBtn: $("openChannelBtn"),
+      commentInput: $("commentInput"),
+      sendCommentBtn: $("sendCommentBtn"),
+      commentList: $("commentList"),
+      sideVideos: $("sideVideos"),
+
+      channelHero: $("channelHero"),
+      channelAvatar: $("channelAvatar"),
+      channelName: $("channelName"),
+      channelBio: $("channelBio"),
+      channelVideoCount: $("channelVideoCount"),
+      channelLikeCount: $("channelLikeCount"),
+      channelVideos: $("channelVideos"),
+      channelNavBtn: $("channelNavBtn"),
+      backHomeBtn: $("backHomeBtn"),
+
+      searchInput: $("searchInput"),
+      searchBtn: $("searchBtn"),
+      openUploadTop: $("openUploadTop")
+    };
+
+    let currentUser = null;
+    let currentProfile = null;
+    let currentWatchVideo = null;
+    let videosCache = [];
+    let channelsCache = [];
+
+    function escapeHtml(str = "") {
+      return str
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function initials(name = "U") {
+      return (name.trim()[0] || "U").toUpperCase();
+    }
+
+    function formatDate(ts) {
+      const date = ts?.toDate ? ts.toDate() : new Date();
+      return new Intl.DateTimeFormat("tr-TR", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }).format(date);
+    }
+
+    function switchPage(id) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      const page = document.getElementById(id);
+      if (page) page.classList.add("active");
+      const btn = document.querySelector(`.nav-btn[data-page="${id}"]`);
+      if (btn) btn.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => switchPage(btn.dataset.page));
+    });
+
+    els.openUploadTop.addEventListener("click", () => switchPage("uploadPage"));
+    els.backHomeBtn.addEventListener("click", () => switchPage("homePage"));
+
+    els.profileName.addEventListener("input", () => {
+      const v = els.profileName.value.trim() || "Kanal Adı";
+      els.profilePreviewName.textContent = v;
+      els.topName.textContent = v;
+    });
+
+    els.profileBio.addEventListener("input", () => {
+      els.profilePreviewBio.textContent = els.profileBio.value.trim() || "Açıklama yok.";
+    });
+
+    els.thumbFile.addEventListener("change", () => {
+      const file = els.thumbFile.files?.[0];
+      if (!file) return;
+      els.thumbPreview.src = URL.createObjectURL(file);
+      els.thumbPreview.classList.remove("hidden");
+    });
+
+    els.avatarFile.addEventListener("change", () => {
+      const file = els.avatarFile.files?.[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      els.profilePreviewAvatar.src = url;
+      els.topAvatar.src = url;
+    });
+
+    async function ensureAuth() {
+      try {
+        await signInAnonymously(auth);
+      } catch (err) {
+        console.error(err);
+        els.statusText.textContent = "Auth hatası: " + err.message;
+      }
+    }
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) return;
+      currentUser = user;
+      els.statusText.textContent = "Bağlandı";
+      els.topUid.textContent = user.uid.slice(0, 12) + "...";
+      await loadOrCreateProfile();
+      listenVideos();
+      listenChannels();
+      await loadMyStats();
+    });
+
+    async function loadOrCreateProfile() {
+      const refDoc = doc(db, "channels", currentUser.uid);
+      const snap = await getDoc(refDoc);
+
+      if (!snap.exists()) {
+        const defaultName = "Kanal-" + currentUser.uid.slice(0, 6);
+        const defaultAvatar = `https://placehold.co/200x200/2b2b2b/ffffff?text=${initials(defaultName)}`;
+        const data = {
+          uid: currentUser.uid,
+          displayName: defaultName,
+          bio: "Yeni kanal",
+          avatarUrl: defaultAvatar,
+          createdAt: serverTimestamp()
+        };
+        await setDoc(refDoc, data);
+        currentProfile = data;
+      } else {
+        currentProfile = snap.data();
+      }
+
+      fillProfile(currentProfile);
+    }
+
+    function fillProfile(profile) {
+      els.profileName.value = profile.displayName || "";
+      els.profileBio.value = profile.bio || "";
+      els.profilePreviewName.textContent = profile.displayName || "Kanal Adı";
+      els.profilePreviewBio.textContent = profile.bio || "Açıklama yok.";
+      els.profilePreviewAvatar.src = profile.avatarUrl || "https://placehold.co/200x200/2b2b2b/ffffff?text=U";
+      els.topAvatar.src = profile.avatarUrl || "https://placehold.co/200x200/2b2b2b/ffffff?text=U";
+      els.topName.textContent = profile.displayName || "İsimsiz Kanal";
+    }
+
+    async function uploadFile(path, file, progressCb) {
+      const storageRef = ref(storage, path);
+      return new Promise((resolve, reject) => {
+        const task = uploadBytesResumable(storageRef, file);
+        task.on("state_changed", snap => {
+          const percent = (snap.bytesTransferred / snap.totalBytes) * 100;
+          progressCb?.(percent);
+        }, reject, async () => {
+          const url = await getDownloadURL(task.snapshot.ref);
+          resolve(url);
+        });
+      });
+    }
+
+    els.saveProfileBtn.addEventListener("click", async () => {
+      try {
+        const displayName = els.profileName.value.trim();
+        const bio = els.profileBio.value.trim();
+        if (!displayName) return alert("Kanal adı boş olamaz");
+
+        let avatarUrl = currentProfile?.avatarUrl || `https://placehold.co/200x200/2b2b2b/ffffff?text=${initials(displayName)}`;
+        const file = els.avatarFile.files?.[0];
+
+        if (file) {
+          avatarUrl = await uploadFile(`avatars/${currentUser.uid}/${Date.now()}_${file.name}`, file);
+        }
+
+        const data = {
+          uid: currentUser.uid,
+          displayName,
+          bio,
+          avatarUrl,
+          updatedAt: serverTimestamp()
+        };
+
+        await setDoc(doc(db, "channels", currentUser.uid), data, { merge: true });
+        currentProfile = { ...currentProfile, ...data };
+        fillProfile(currentProfile);
+        alert("Profil kaydedildi");
+      } catch (err) {
+        console.error(err);
+        alert("Profil kaydedilemedi: " + err.message);
+      }
+    });
+
+    els.uploadBtn.addEventListener("click", async () => {
+      try {
+        const title = els.videoTitle.value.trim();
+        const description = els.videoDesc.value.trim();
+        const tags = els.videoTags.value.split(",").map(s => s.trim()).filter(Boolean);
+        const video = els.videoFile.files?.[0];
+        const thumb = els.thumbFile.files?.[0];
+
+        if (!title) return alert("Başlık gir");
+        if (!video) return alert("Video seç");
+
+        els.uploadStatus.textContent = "Video yükleniyor...";
+        els.uploadBar.style.width = "0%";
+
+        const videoUrl = await uploadFile(
+          `videos/${currentUser.uid}/${Date.now()}_${video.name}`,
+          video,
+          percent => {
+            els.uploadBar.style.width = percent + "%";
+            els.uploadStatus.textContent = "Video yükleniyor: %" + Math.round(percent);
+          }
+        );
+
+        let thumbnailUrl = "https://placehold.co/1280x720/111111/ffffff?text=VideoTube";
+        if (thumb) {
+          els.uploadStatus.textContent = "Thumbnail yükleniyor...";
+          thumbnailUrl = await uploadFile(`thumbnails/${currentUser.uid}/${Date.now()}_${thumb.name}`, thumb);
+        }
+
+        await addDoc(collection(db, "videos"), {
+          title,
+          description,
+          tags,
+          videoUrl,
+          thumbnailUrl,
+          uid: currentUser.uid,
+          channelName: currentProfile.displayName,
+          channelAvatar: currentProfile.avatarUrl,
+          likesCount: 0,
+          commentsCount: 0,
+          createdAt: serverTimestamp()
+        });
+
+        els.videoTitle.value = "";
+        els.videoDesc.value = "";
+        els.videoTags.value = "";
+        els.videoFile.value = "";
+        els.thumbFile.value = "";
+        els.thumbPreview.classList.add("hidden");
+        els.uploadBar.style.width = "100%";
+        els.uploadStatus.textContent = "Yükleme tamamlandı";
+        await loadMyStats();
+        switchPage("allVideosPage");
+      } catch (err) {
+        console.error(err);
+        alert("Yükleme hatası: " + err.message);
+      }
+    });
+
+    function renderVideoCard(video) {
+      return `
+        <article class="video-card" data-watch-id="${video.id}">
+          <img class="thumb" src="${escapeHtml(video.thumbnailUrl || '')}" alt="">
+          <div class="video-info">
+            <img class="avatar" src="${escapeHtml(video.channelAvatar || 'https://placehold.co/100x100/2b2b2b/ffffff?text=U')}" alt="">
+            <div>
+              <div class="title">${escapeHtml(video.title || "Başlıksız")}</div>
+              <div class="small muted">${escapeHtml(video.channelName || "Kanal")}</div>
+              <div class="small muted" style="margin-top:6px;">👍 ${video.likesCount || 0} • 💬 ${video.commentsCount || 0}</div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderChannelCard(channel, stats = { videoCount: 0, likeCount: 0 }) {
+      return `
+        <article class="panel" data-channel-id="${channel.uid}" style="cursor:pointer; text-align:center;">
+          <img class="big-avatar" style="width:86px;height:86px;" src="${escapeHtml(channel.avatarUrl || '')}" alt="">
+          <div style="font-weight:800; margin-top:10px;">${escapeHtml(channel.displayName || "Kanal")}</div>
+          <div class="small muted" style="margin-top:6px;">${escapeHtml(channel.bio || "Açıklama yok")}</div>
+          <div class="small muted" style="margin-top:10px;">🎬 ${stats.videoCount} • 👍 ${stats.likeCount}</div>
+        </article>
+      `;
+    }
+
+    function bindVideoClicks() {
+      document.querySelectorAll("[data-watch-id]").forEach(el => {
+        el.onclick = () => {
+          const id = el.getAttribute("data-watch-id");
+          const found = videosCache.find(v => v.id === id);
+          if (found) openVideo(found);
+        };
+      });
+    }
+
+    function bindChannelClicks() {
+      document.querySelectorAll("[data-channel-id]").forEach(el => {
+        el.onclick = () => {
+          const uid = el.getAttribute("data-channel-id");
+          openChannel(uid);
+        };
+      });
+    }
+
+    function listenVideos() {
+      const qy = query(collection(db, "videos"), orderBy("createdAt", "desc"));
+      onSnapshot(qy, snap => {
+        videosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderVideoLists(videosCache);
+        loadMyStats();
+      }, err => {
+        console.error(err);
+        els.statusText.textContent = "Video index/rules hatası olabilir";
+      });
+    }
+
+    function listenChannels() {
+      const qy = query(collection(db, "channels"), limit(30));
+      onSnapshot(qy, async snap => {
+        channelsCache = snap.docs.map(d => d.data());
+        await renderChannelLists(channelsCache);
+      });
+    }
+
+    async function getChannelStats(uid) {
+      const qy = query(collection(db, "videos"), where("uid", "==", uid));
+      const snap = await getDocs(qy);
+      const list = snap.docs.map(d => d.data());
+      return {
+        videoCount: list.length,
+        likeCount: list.reduce((a, b) => a + (b.likesCount || 0), 0)
+      };
+    }
+
+    function renderVideoLists(list) {
+      const html = list.length ? list.map(renderVideoCard).join("") : `<div class="empty">Henüz video yok.</div>`;
+      els.allVideosGrid.innerHTML = html;
+      els.homeVideos.innerHTML = list.slice(0, 6).length ? list.slice(0, 6).map(renderVideoCard).join("") : `<div class="empty">Henüz video yok.</div>`;
+      els.sideVideos.innerHTML = list.slice(0, 8).map(v => `
+        <div class="mini" data-watch-id="${v.id}">
+          <img src="${escapeHtml(v.thumbnailUrl || '')}" alt="">
+          <div>
+            <div style="font-weight:700; line-height:1.35;">${escapeHtml(v.title || "")}</div>
+            <div class="small muted" style="margin-top:4px;">${escapeHtml(v.channelName || "")}</div>
+            <div class="small muted">👍 ${v.likesCount || 0}</div>
+          </div>
+        </div>
+      `).join("") || `<div class="empty">Video yok.</div>`;
+      bindVideoClicks();
+    }
+
+    async function renderChannelLists(list) {
+      if (!list.length) {
+        els.channelsGrid.innerHTML = `<div class="empty">Henüz kanal yok.</div>`;
+        els.homeChannels.innerHTML = `<div class="empty">Henüz kanal yok.</div>`;
+        return;
+      }
+
+      const statsEntries = await Promise.all(list.map(async ch => {
+        const st = await getChannelStats(ch.uid);
+        return [ch.uid, st];
+      }));
+      const statsMap = Object.fromEntries(statsEntries);
+
+      els.channelsGrid.innerHTML = list.map(ch => renderChannelCard(ch, statsMap[ch.uid])).join("");
+      els.homeChannels.innerHTML = list.slice(0, 6).map(ch => renderChannelCard(ch, statsMap[ch.uid])).join("");
+      bindChannelClicks();
+    }
+
+    async function loadMyStats() {
+      if (!currentUser) return;
+      const stats = await getChannelStats(currentUser.uid);
+      els.myVideoCount.textContent = stats.videoCount;
+      els.myLikeCount.textContent = stats.likeCount;
+    }
+
+    function openVideo(video) {
+      currentWatchVideo = video;
+      els.watchEmpty.classList.add("hidden");
+      els.watchWrap.classList.remove("hidden");
+      els.watchVideo.src = video.videoUrl || "";
+      els.watchTitle.textContent = video.title || "Başlıksız";
+      els.watchChannel.textContent = video.channelName || "Kanal";
+      els.watchDate.textContent = formatDate(video.createdAt);
+      els.watchLikes.textContent = (video.likesCount || 0) + " beğeni";
+      els.watchDesc.textContent = video.description || "Açıklama yok.";
+      switchPage("watchPage");
+      loadComments(video.id);
+    }
+
+    function loadComments(videoId) {
+      const qy = query(collection(db, "videos", videoId, "comments"), orderBy("createdAt", "desc"));
+      onSnapshot(qy, snap => {
+        const items = snap.docs.map(d => d.data());
+        els.commentList.innerHTML = items.length ? items.map(c => `
+          <div class="comment">
+            <img class="avatar" src="${escapeHtml(c.authorAvatar || 'https://placehold.co/100x100/2b2b2b/ffffff?text=U')}" alt="">
+            <div>
+              <div style="font-weight:700;">${escapeHtml(c.authorName || "Kullanıcı")}</div>
+              <div class="small muted">${formatDate(c.createdAt)}</div>
+              <div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(c.text || "")}</div>
+            </div>
+          </div>
+        `).join("") : `<div class="empty" style="margin-top:10px;">Henüz yorum yok.</div>`;
+      });
+    }
+
+    els.sendCommentBtn.addEventListener("click", async () => {
+      try {
+        if (!currentWatchVideo) return alert("Önce video aç");
+        const text = els.commentInput.value.trim();
+        if (!text) return alert("Yorum boş olamaz");
+
+        await addDoc(collection(db, "videos", currentWatchVideo.id, "comments"), {
+          uid: currentUser.uid,
+          authorName: currentProfile.displayName,
+          authorAvatar: currentProfile.avatarUrl,
+          text,
+          createdAt: serverTimestamp()
+        });
+
+        await updateDoc(doc(db, "videos", currentWatchVideo.id), {
+          commentsCount: increment(1)
+        });
+
+        els.commentInput.value = "";
+      } catch (err) {
+        console.error(err);
+        alert("Yorum atılamadı: " + err.message);
+      }
+    });
+
+    els.likeBtn.addEventListener("click", async () => {
+      try {
+        if (!currentWatchVideo) return alert("Önce video aç");
+
+        const likeRef = doc(db, "videos", currentWatchVideo.id, "likes", currentUser.uid);
+        const likeSnap = await getDoc(likeRef);
+
+        if (likeSnap.exists()) return alert("Bu videoya zaten like attın");
+
+        await setDoc(likeRef, {
+          uid: currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        await updateDoc(doc(db, "videos", currentWatchVideo.id), {
+          likesCount: increment(1)
+        });
+      } catch (err) {
+        console.error(err);
+        alert("Like atılamadı: " + err.message);
+      }
+    });
+
+    els.openChannelBtn.addEventListener("click", () => {
+      if (currentWatchVideo) openChannel(currentWatchVideo.uid);
+    });
+
+    async function openChannel(uid) {
+      const snap = await getDoc(doc(db, "channels", uid));
+      if (!snap.exists()) return alert("Kanal bulunamadı");
+
+      const channel = snap.data();
+      const qy = query(collection(db, "videos"), where("uid", "==", uid));
+      const videoSnap = await getDocs(qy);
+      const videos = videoSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const likeSum = videos.reduce((a, b) => a + (b.likesCount || 0), 0);
+
+      els.channelAvatar.src = channel.avatarUrl || "https://placehold.co/200x200/2b2b2b/ffffff?text=C";
+      els.channelName.textContent = channel.displayName || "Kanal";
+      els.channelBio.textContent = channel.bio || "Açıklama yok";
+      els.channelVideoCount.textContent = videos.length;
+      els.channelLikeCount.textContent = likeSum;
+      els.channelVideos.innerHTML = videos.length ? videos.map(renderVideoCard).join("") : `<div class="empty">Bu kanalda video yok.</div>`;
+      bindVideoClicks();
+      els.channelNavBtn.classList.remove("hidden");
+      switchPage("channelPage");
+    }
+
+    function runSearch() {
+      const term = els.searchInput.value.trim().toLowerCase();
+      if (!term) {
+        renderVideoLists(videosCache);
+        renderChannelLists(channelsCache);
+        switchPage("allVideosPage");
+        return;
+      }
+
+      const filteredVideos = videosCache.filter(v =>
+        [v.title, v.description, v.channelName, ...(v.tags || [])].join(" ").toLowerCase().includes(term)
+      );
+
+      const filteredChannels = channelsCache.filter(c =>
+        [c.displayName, c.bio].join(" ").toLowerCase().includes(term)
+      );
+
+      els.allVideosGrid.innerHTML = filteredVideos.length ? filteredVideos.map(renderVideoCard).join("") : `<div class="empty">Video bulunamadı.</div>`;
+      els.channelsGrid.innerHTML = filteredChannels.length ? filteredChannels.map(c => {
+        const count = videosCache.filter(v => v.uid === c.uid).length;
+        const likes = videosCache.filter(v => v.uid === c.uid).reduce((s, v) => s + (v.likesCount || 0), 0);
+        return renderChannelCard(c, { videoCount: count, likeCount: likes });
+      }).join("") : `<div class="empty">Kanal bulunamadı.</div>`;
+
+      bindVideoClicks();
+      bindChannelClicks();
+      switchPage("allVideosPage");
+    }
+
+    els.searchBtn.addEventListener("click", runSearch);
+    els.searchInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") runSearch();
+    });
+
+    ensureAuth();
+  </script>
+</body>
+</html>
