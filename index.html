@@ -3,989 +3,671 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VideoTube Firebase</title>
+  <title>PixelRoom Chat</title>
   <style>
     :root{
-      --bg:#0f0f0f;
-      --card:#181818;
-      --card2:#202020;
-      --line:rgba(255,255,255,.08);
-      --text:#f5f5f5;
-      --muted:#aaaaaa;
-      --red:#ff2d55;
-      --green:#00c853;
+      --bg:#0b141a;
+      --panel:#111b21;
+      --panel2:#202c33;
+      --line:#2a3942;
+      --text:#e9edef;
+      --muted:#8696a0;
+      --accent:#00a884;
+      --accent2:#005c4b;
+      --danger:#ff5c75;
+      --bubbleMe:#005c4b;
+      --bubbleOther:#202c33;
+      --shadow:0 12px 30px rgba(0,0,0,.25);
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Arial,Helvetica,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-    }
-    .topbar{
-      position:sticky; top:0; z-index:20;
-      display:flex; gap:12px; align-items:center; justify-content:space-between;
-      padding:14px 16px;
-      background:rgba(15,15,15,.95);
-      border-bottom:1px solid var(--line);
-      backdrop-filter:blur(10px);
-    }
-    .brand{display:flex; gap:10px; align-items:center; font-weight:700}
-    .logo{
-      width:38px; height:38px; border-radius:12px;
-      background:linear-gradient(135deg,var(--red),orange);
-      display:grid; place-items:center; font-size:18px;
-    }
-    .search{
-      flex:1; max-width:700px; display:flex; gap:10px;
-    }
-    .search input,.input,.textarea{
-      width:100%;
-      background:#111;
-      color:var(--text);
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:12px 14px;
-      outline:none;
-    }
-    .textarea{min-height:110px; resize:vertical}
-    .btn{
-      background:var(--card2);
-      color:var(--text);
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:12px 14px;
-      cursor:pointer;
-    }
-    .btn.red{background:var(--red); border-color:transparent}
-    .btn.green{background:var(--green); border-color:transparent}
-    .layout{
-      display:grid;
-      grid-template-columns:230px 1fr;
-      min-height:calc(100vh - 67px);
-    }
-    .sidebar{
-      border-right:1px solid var(--line);
-      padding:16px;
-    }
-    .nav-btn{
-      width:100%;
-      text-align:left;
-      background:transparent;
-      color:var(--text);
-      border:1px solid transparent;
-      border-radius:12px;
-      padding:13px;
-      margin-bottom:8px;
-      cursor:pointer;
-    }
-    .nav-btn.active,.nav-btn:hover{background:var(--card); border-color:var(--line)}
-    .content{padding:20px}
-    .page{display:none}
-    .page.active{display:block}
-    .section-title{font-size:28px; font-weight:800; margin:0 0 16px}
-    .panel{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:16px;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-      gap:16px;
-    }
-    .video-card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:18px;
-      overflow:hidden;
-      cursor:pointer;
-    }
-    .thumb{
-      width:100%;
-      aspect-ratio:16/9;
-      object-fit:cover;
-      background:#111;
-      display:block;
-    }
-    .video-info{
-      display:grid;
-      grid-template-columns:48px 1fr;
-      gap:12px;
-      padding:14px;
-    }
-    .avatar{
-      width:48px; height:48px; border-radius:50%; object-fit:cover; background:#333;
-      border:2px solid rgba(255,255,255,.08);
-    }
-    .title{font-weight:700; line-height:1.35; margin-bottom:6px}
+    html,body{margin:0;padding:0;height:100%;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+    button,input,textarea{font:inherit}
+    .hidden{display:none!important}
+    .app{height:100vh;display:grid;grid-template-columns:380px 1fr}
+    .sidebar{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+    .chat-area{background:#0b141a;min-width:0}
+    .auth-wrap{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at top right,#123,#0b141a 45%)}
+    .auth-card{width:min(100%,460px);background:rgba(17,27,33,.96);border:1px solid var(--line);border-radius:28px;padding:24px;box-shadow:var(--shadow)}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    .logo{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--accent),#1ee3b1);display:grid;place-items:center;font-size:24px;font-weight:800;color:#06261f}
+    .auth-title{font-size:28px;font-weight:800;margin:0}
     .muted{color:var(--muted)}
-    .small{font-size:13px}
-    .row{display:flex; gap:10px; flex-wrap:wrap}
-    .hero{
-      display:grid;
-      grid-template-columns:100px 1fr auto;
-      gap:16px;
-      align-items:center;
-    }
-    .big-avatar{
-      width:100px; height:100px; border-radius:50%; object-fit:cover; background:#333;
-    }
-    .watch-layout{
-      display:grid;
-      grid-template-columns:minmax(0,1.6fr) 330px;
-      gap:18px;
-    }
-    video{
-      width:100%;
-      background:#000;
-      border-radius:16px;
-    }
-    .comment{
-      display:grid;
-      grid-template-columns:42px 1fr;
-      gap:10px;
-      background:#131313;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      margin-top:10px;
-    }
-    .mini{
-      display:grid;
-      grid-template-columns:130px 1fr;
-      gap:10px;
-      cursor:pointer;
-      margin-bottom:12px;
-    }
-    .mini img{
-      width:100%;
-      aspect-ratio:16/9;
-      object-fit:cover;
-      border-radius:12px;
-      background:#111;
-    }
-    .progress{
-      width:100%; height:12px; background:#111; border:1px solid var(--line);
-      border-radius:999px; overflow:hidden;
-    }
-    .bar{
-      width:0%; height:100%; background:linear-gradient(90deg,var(--red),orange);
-      transition:.15s linear;
-    }
-    .empty{
-      padding:24px;
-      background:var(--card);
-      border:1px dashed var(--line);
-      border-radius:18px;
-      color:var(--muted);
-    }
-    .top-user{
-      display:flex; gap:10px; align-items:center;
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:6px 10px 6px 6px;
-    }
-    .top-user img{width:38px; height:38px; border-radius:50%; object-fit:cover; background:#333}
-    @media (max-width: 980px){
-      .layout{grid-template-columns:1fr}
-      .sidebar{border-right:0; border-bottom:1px solid var(--line)}
-      .watch-layout,.hero{grid-template-columns:1fr}
-    }
-    @media (max-width: 760px){
-      .topbar{flex-wrap:wrap}
-      .search{order:3; width:100%; max-width:none}
+    .tabs{display:flex;gap:10px;margin:16px 0 18px}
+    .tab{flex:1;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:#0e171c;color:var(--text);cursor:pointer}
+    .tab.active{background:var(--accent2);border-color:transparent}
+    .field{display:grid;gap:8px;margin-bottom:12px}
+    .input,.textarea{width:100%;padding:13px 14px;background:#0d151a;border:1px solid var(--line);border-radius:14px;color:var(--text);outline:none}
+    .textarea{min-height:90px;resize:vertical}
+    .btn{border:0;border-radius:14px;padding:13px 16px;cursor:pointer;color:#fff;background:var(--panel2);transition:.18s ease}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:var(--accent)}
+    .btn.danger{background:var(--danger)}
+    .topbar{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(17,27,33,.96)}
+    .userbox{display:flex;align-items:center;gap:12px;min-width:0}
+    .avatar{width:42px;height:42px;border-radius:50%;background:#31444e;display:grid;place-items:center;font-weight:700;color:#fff;flex-shrink:0}
+    .avatar.lg{width:54px;height:54px}
+    .pill{padding:8px 10px;border-radius:999px;background:#0d151a;border:1px solid var(--line);font-size:12px;color:var(--muted)}
+    .search{padding:12px 16px;border-bottom:1px solid var(--line)}
+    .chat-list,.user-list{overflow:auto}
+    .chat-item,.user-item{display:grid;grid-template-columns:48px 1fr auto;gap:12px;padding:12px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);align-items:center}
+    .chat-item:hover,.chat-item.active,.user-item:hover{background:#172229}
+    .chat-item .name,.user-item .name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chat-item .preview,.user-item .preview{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .section-head{padding:14px 16px 8px;font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+    .chat-shell{height:100%;display:grid;grid-template-rows:72px 1fr auto}
+    .chat-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(17,27,33,.95)}
+    .messages{padding:18px;overflow:auto;display:flex;flex-direction:column;gap:10px;height:calc(100vh - 145px)}
+    .bubble{max-width:min(72%,620px);padding:10px 12px;border-radius:16px;line-height:1.45;box-shadow:var(--shadow);word-wrap:break-word}
+    .bubble.me{align-self:flex-end;background:var(--bubbleMe);border-top-right-radius:6px}
+    .bubble.other{align-self:flex-start;background:var(--bubbleOther);border-top-left-radius:6px}
+    .meta{font-size:11px;color:#c2d1d6;margin-top:6px;display:flex;justify-content:flex-end;gap:6px;opacity:.9}
+    .composer{padding:14px 16px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:12px;background:rgba(17,27,33,.97)}
+    .empty-state{height:100%;display:grid;place-items:center;padding:28px;text-align:center}
+    .empty-card{background:rgba(17,27,33,.9);border:1px solid var(--line);border-radius:28px;padding:30px;max-width:560px;box-shadow:var(--shadow)}
+    .profile-card{padding:16px;border-top:1px solid var(--line);background:#0f191f}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .notice{margin-top:10px;padding:12px 14px;background:#0d151a;border:1px solid var(--line);border-radius:14px;color:var(--muted);font-size:13px}
+    .count{min-width:22px;height:22px;border-radius:999px;background:var(--accent);display:grid;place-items:center;font-size:12px;color:#03231c;padding:0 6px}
+    .toast{position:fixed;right:20px;bottom:20px;background:#172229;border:1px solid var(--line);padding:14px 16px;border-radius:14px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s ease;z-index:999}
+    .toast.show{opacity:1;transform:translateY(0)}
+    @media (max-width:980px){
+      .app{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .chat-area{min-height:100vh}
+      .grid2{grid-template-columns:1fr}
+      .bubble{max-width:86%}
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">▶</div>
-      <div>VideoTube</div>
-    </div>
-
-    <div class="search">
-      <input id="searchInput" type="text" placeholder="Video veya kanal ara..." />
-      <button class="btn" id="searchBtn">Ara</button>
-    </div>
-
-    <div style="display:flex; gap:10px; align-items:center;">
-      <button class="btn red" id="openUploadTop">Yükle</button>
-      <div class="top-user">
-        <img id="topAvatar" src="https://placehold.co/100x100/2b2b2b/ffffff?text=U" alt="">
+  <div id="authScreen" class="auth-wrap">
+    <div class="auth-card">
+      <div class="brand">
+        <div class="logo">✦</div>
         <div>
-          <div id="topName" style="font-weight:700;">Yükleniyor...</div>
-          <div class="small muted" id="topUid">uid...</div>
+          <h1 class="auth-title">PixelRoom Chat</h1>
+          <div class="muted">WhatsApp tarzı Firebase sohbet uygulaması</div>
         </div>
       </div>
+
+      <div class="tabs">
+        <button class="tab active" id="loginTab">Giriş Yap</button>
+        <button class="tab" id="registerTab">Kayıt Ol</button>
+      </div>
+
+      <div class="field"><input class="input hidden" id="nameInput" placeholder="Görünen ad" /></div>
+      <div class="field"><input class="input hidden" id="usernameInput" placeholder="Kullanıcı adı (benzersiz)" /></div>
+      <div class="field"><input class="input" id="emailInput" type="email" placeholder="E-posta" /></div>
+      <div class="field"><input class="input" id="passwordInput" type="password" placeholder="Şifre" /></div>
+
+      <div class="grid2">
+        <button class="btn primary" id="authSubmitBtn">Giriş Yap</button>
+        <button class="btn" id="resetBtn">Şifre Sıfırla</button>
+      </div>
+
+      <div class="notice">
+        Önce Firebase config bilgilerini gir. Sonra Authentication'da Email/Password aç ve Firestore oluştur.
+      </div>
     </div>
-  </header>
+  </div>
 
-  <div class="layout">
+  <div id="appScreen" class="app hidden">
     <aside class="sidebar">
-      <button class="nav-btn active" data-page="homePage">🏠 Ana Sayfa</button>
-      <button class="nav-btn" data-page="allVideosPage">🎬 Tüm Videolar</button>
-      <button class="nav-btn" data-page="channelsPage">📺 Kanallar</button>
-      <button class="nav-btn" data-page="uploadPage">⤴ Video Yükle</button>
-      <button class="nav-btn" data-page="profilePage">👤 Profilim</button>
-      <button class="nav-btn" data-page="watchPage">▶ Oynatıcı</button>
-      <button class="nav-btn hidden" data-page="channelPage" id="channelNavBtn">📡 Kanal</button>
+      <div class="topbar">
+        <div class="userbox">
+          <div class="avatar" id="meAvatar">U</div>
+          <div style="min-width:0;">
+            <div id="meName" style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Kullanıcı</div>
+            <div id="meUsername" class="muted" style="font-size:13px;">@username</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn" id="notifBtn">Bildirim</button>
+          <button class="btn danger" id="logoutBtn">Çıkış</button>
+        </div>
+      </div>
 
-      <div class="panel" style="margin-top:14px;">
-        <div style="font-weight:700; margin-bottom:8px;">Durum</div>
-        <div class="small muted" id="statusText">Firebase bağlanıyor...</div>
+      <div class="search">
+        <input class="input" id="searchUserInput" placeholder="Kullanıcı ara..." />
+      </div>
+
+      <div class="section-head">Sohbetler</div>
+      <div id="chatList" class="chat-list"></div>
+
+      <div class="section-head">Kullanıcılar</div>
+      <div id="userList" class="user-list"></div>
+
+      <div class="profile-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="avatar lg" id="profilePreviewAvatar">U</div>
+          <div style="min-width:0;">
+            <div style="font-weight:800;">Profil Düzenle</div>
+            <div class="muted small">Adını ve kullanıcı adını güncelle</div>
+          </div>
+        </div>
+        <div style="display:grid;gap:10px;margin-top:12px;">
+          <input class="input" id="profileNameInput" placeholder="Yeni görünen ad" />
+          <input class="input" id="profileUsernameInput" placeholder="Yeni kullanıcı adı" />
+          <button class="btn primary" id="saveProfileBtn">Profili Kaydet</button>
+        </div>
       </div>
     </aside>
 
-    <main class="content">
-      <section class="page active" id="homePage">
-        <h1 class="section-title">Ana Sayfa</h1>
-        <div class="panel" style="margin-bottom:16px;">
-          Video yükle, izle, yorum at, like at, kanal aç. Hepsi Firebase ile çalışır.
+    <section class="chat-area">
+      <div id="emptyState" class="empty-state">
+        <div class="empty-card">
+          <div class="logo" style="margin:0 auto 14px;">💬</div>
+          <h2 style="margin:0 0 10px;">Bir sohbet seç</h2>
+          <div class="muted">Soldaki kullanıcı listesinden birini seçip sohbet başlat.</div>
         </div>
+      </div>
 
-        <h2>Yeni Videolar</h2>
-        <div class="grid" id="homeVideos"></div>
-
-        <h2 style="margin-top:24px;">Kanallar</h2>
-        <div class="grid" id="homeChannels"></div>
-      </section>
-
-      <section class="page" id="allVideosPage">
-        <h1 class="section-title">Tüm Videolar</h1>
-        <div class="grid" id="allVideosGrid"></div>
-      </section>
-
-      <section class="page" id="channelsPage">
-        <h1 class="section-title">Kanallar</h1>
-        <div class="grid" id="channelsGrid"></div>
-      </section>
-
-      <section class="page" id="uploadPage">
-        <h1 class="section-title">Video Yükle</h1>
-        <div class="panel">
-          <div style="display:grid; gap:12px;">
-            <input class="input" id="videoTitle" placeholder="Video başlığı">
-            <textarea class="textarea" id="videoDesc" placeholder="Açıklama"></textarea>
-            <input class="input" id="videoTags" placeholder="Etiketler: oyun, komik, shorts">
+      <div id="chatShell" class="chat-shell hidden">
+        <div class="chat-top">
+          <div class="userbox">
+            <div class="avatar" id="chatAvatar">C</div>
             <div>
-              <div class="small muted" style="margin-bottom:8px;">Thumbnail</div>
-              <input id="thumbFile" type="file" accept="image/*">
-              <img id="thumbPreview" class="thumb hidden" style="max-width:340px; margin-top:10px;" alt="">
-            </div>
-            <div>
-              <div class="small muted" style="margin-bottom:8px;">Video dosyası</div>
-              <input id="videoFile" type="file" accept="video/*">
-            </div>
-            <div class="progress"><div class="bar" id="uploadBar"></div></div>
-            <div class="small muted" id="uploadStatus">Henüz yükleme başlamadı.</div>
-            <button class="btn red" id="uploadBtn">Videoyu yükle</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="page" id="profilePage">
-        <h1 class="section-title">Profilim</h1>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;" id="profileCols">
-          <div class="panel">
-            <h3 style="margin-top:0;">Kanal Bilgileri</h3>
-            <div style="display:grid; gap:12px;">
-              <input class="input" id="profileName" placeholder="Kanal adı">
-              <textarea class="textarea" id="profileBio" placeholder="Kanal açıklaması"></textarea>
-              <div>
-                <div class="small muted" style="margin-bottom:8px;">Profil resmi</div>
-                <input id="avatarFile" type="file" accept="image/*">
-              </div>
-              <button class="btn green" id="saveProfileBtn">Profili kaydet</button>
+              <div id="chatName" style="font-weight:800;">Sohbet</div>
+              <div id="chatSub" class="muted" style="font-size:13px;">@username</div>
             </div>
           </div>
-
-          <div class="panel">
-            <h3 style="margin-top:0;">Önizleme</h3>
-            <div class="row" style="align-items:center;">
-              <img id="profilePreviewAvatar" class="big-avatar" src="https://placehold.co/200x200/2b2b2b/ffffff?text=U" alt="">
-              <div>
-                <div id="profilePreviewName" style="font-size:24px; font-weight:800;">Kanal Adı</div>
-                <div id="profilePreviewBio" class="muted">Açıklama yok.</div>
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:14px;">
-              <div class="panel" style="padding:12px; min-width:120px;">
-                <div class="small muted">Videolar</div>
-                <div id="myVideoCount" style="font-size:24px; font-weight:800;">0</div>
-              </div>
-              <div class="panel" style="padding:12px; min-width:120px;">
-                <div class="small muted">Toplam Like</div>
-                <div id="myLikeCount" style="font-size:24px; font-weight:800;">0</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="page" id="watchPage">
-        <h1 class="section-title">Video Oynatıcı</h1>
-        <div class="empty" id="watchEmpty">İzlemek için bir video seç.</div>
-
-        <div class="watch-layout hidden" id="watchWrap">
-          <div>
-            <div class="panel">
-              <video id="watchVideo" controls playsinline></video>
-            </div>
-
-            <div class="panel" style="margin-top:16px;">
-              <h2 id="watchTitle" style="margin:0 0 10px;"></h2>
-              <div class="row small muted" style="margin-bottom:10px;">
-                <div id="watchChannel"></div>
-                <div id="watchDate"></div>
-                <div id="watchLikes"></div>
-              </div>
-              <div id="watchDesc" class="muted" style="white-space:pre-wrap;"></div>
-              <div class="row" style="margin-top:14px;">
-                <button class="btn red" id="likeBtn">👍 Like</button>
-                <button class="btn" id="openChannelBtn">📺 Kanala Git</button>
-              </div>
-            </div>
-
-            <div class="panel" style="margin-top:16px;">
-              <h3 style="margin-top:0;">Yorumlar</h3>
-              <textarea class="textarea" id="commentInput" placeholder="Yorum yaz..."></textarea>
-              <button class="btn green" id="sendCommentBtn" style="margin-top:10px;">Yorum Gönder</button>
-              <div id="commentList"></div>
-            </div>
-          </div>
-
-          <div>
-            <div class="panel">
-              <h3 style="margin-top:0;">Diğer Videolar</h3>
-              <div id="sideVideos"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="page" id="channelPage">
-        <h1 class="section-title">Kanal</h1>
-        <div class="panel hero" id="channelHero">
-          <img id="channelAvatar" class="big-avatar" src="https://placehold.co/200x200/2b2b2b/ffffff?text=C" alt="">
-          <div>
-            <div id="channelName" style="font-size:28px; font-weight:800;"></div>
-            <div id="channelBio" class="muted" style="margin-top:8px;"></div>
-            <div class="row" style="margin-top:12px;">
-              <div class="small muted">Video: <span id="channelVideoCount">0</span></div>
-              <div class="small muted">Like: <span id="channelLikeCount">0</span></div>
-            </div>
-          </div>
-          <button class="btn" id="backHomeBtn">Geri</button>
+          <div class="pill">Gerçek zamanlı</div>
         </div>
 
-        <div class="grid" id="channelVideos" style="margin-top:16px;"></div>
-      </section>
-    </main>
+        <div id="messages" class="messages"></div>
+
+        <div class="composer">
+          <textarea class="textarea" id="messageInput" placeholder="Mesaj yaz..." style="min-height:56px;max-height:160px;"></textarea>
+          <button class="btn primary" id="sendBtn">Gönder</button>
+        </div>
+      </div>
+    </section>
   </div>
+
+  <div id="toast" class="toast"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAnalytics, isSupported as analyticsSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
     import {
       getAuth,
-      signInAnonymously,
-      onAuthStateChanged
+      onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
       getFirestore,
       doc,
       setDoc,
       getDoc,
-      addDoc,
-      collection,
-      query,
-      where,
-      orderBy,
-      serverTimestamp,
-      onSnapshot,
       updateDoc,
-      increment,
+      collection,
+      addDoc,
+      query,
+      orderBy,
+      onSnapshot,
+      serverTimestamp,
       getDocs,
-      limit
+      where,
+      limit,
+      increment
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import {
-      getStorage,
-      ref,
-      uploadBytesResumable,
-      getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyABqkhpL1SMRzRJ9GQLjjZE2IryqpAvMPw",
-      authDomain: "pixelroom-ae218.firebaseapp.com",
-      databaseURL: "https://pixelroom-ae218-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "pixelroom-ae218",
-      storageBucket: "pixelroom-ae218.firebasestorage.app",
-      messagingSenderId: "720297722320",
-      appId: "1:720297722320:web:c815edae99d1efa7ff39d5",
-      measurementId: "G-HD8901B19M"
+      apiKey: "BURAYA_API_KEY",
+      authDomain: "BURAYA_AUTH_DOMAIN",
+      projectId: "BURAYA_PROJECT_ID",
+      storageBucket: "BURAYA_STORAGE_BUCKET",
+      messagingSenderId: "BURAYA_MESSAGING_SENDER_ID",
+      appId: "BURAYA_APP_ID",
+      measurementId: "BURAYA_MEASUREMENT_ID"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const storage = getStorage(app);
-
-    analyticsSupported().then(ok => {
-      if (ok) getAnalytics(app);
-    }).catch(() => {});
+    analyticsSupported().then(ok => { if (ok) getAnalytics(app); }).catch(() => {});
 
     const $ = id => document.getElementById(id);
-
     const els = {
-      statusText: $("statusText"),
-      topAvatar: $("topAvatar"),
-      topName: $("topName"),
-      topUid: $("topUid"),
-
-      homeVideos: $("homeVideos"),
-      allVideosGrid: $("allVideosGrid"),
-      channelsGrid: $("channelsGrid"),
-      homeChannels: $("homeChannels"),
-
-      videoTitle: $("videoTitle"),
-      videoDesc: $("videoDesc"),
-      videoTags: $("videoTags"),
-      thumbFile: $("thumbFile"),
-      videoFile: $("videoFile"),
-      thumbPreview: $("thumbPreview"),
-      uploadBar: $("uploadBar"),
-      uploadStatus: $("uploadStatus"),
-      uploadBtn: $("uploadBtn"),
-
-      profileName: $("profileName"),
-      profileBio: $("profileBio"),
-      avatarFile: $("avatarFile"),
-      saveProfileBtn: $("saveProfileBtn"),
+      authScreen: $("authScreen"),
+      appScreen: $("appScreen"),
+      loginTab: $("loginTab"),
+      registerTab: $("registerTab"),
+      authSubmitBtn: $("authSubmitBtn"),
+      resetBtn: $("resetBtn"),
+      nameInput: $("nameInput"),
+      usernameInput: $("usernameInput"),
+      emailInput: $("emailInput"),
+      passwordInput: $("passwordInput"),
+      meAvatar: $("meAvatar"),
+      meName: $("meName"),
+      meUsername: $("meUsername"),
+      logoutBtn: $("logoutBtn"),
+      notifBtn: $("notifBtn"),
+      searchUserInput: $("searchUserInput"),
+      chatList: $("chatList"),
+      userList: $("userList"),
       profilePreviewAvatar: $("profilePreviewAvatar"),
-      profilePreviewName: $("profilePreviewName"),
-      profilePreviewBio: $("profilePreviewBio"),
-      myVideoCount: $("myVideoCount"),
-      myLikeCount: $("myLikeCount"),
-
-      watchEmpty: $("watchEmpty"),
-      watchWrap: $("watchWrap"),
-      watchVideo: $("watchVideo"),
-      watchTitle: $("watchTitle"),
-      watchChannel: $("watchChannel"),
-      watchDate: $("watchDate"),
-      watchLikes: $("watchLikes"),
-      watchDesc: $("watchDesc"),
-      likeBtn: $("likeBtn"),
-      openChannelBtn: $("openChannelBtn"),
-      commentInput: $("commentInput"),
-      sendCommentBtn: $("sendCommentBtn"),
-      commentList: $("commentList"),
-      sideVideos: $("sideVideos"),
-
-      channelHero: $("channelHero"),
-      channelAvatar: $("channelAvatar"),
-      channelName: $("channelName"),
-      channelBio: $("channelBio"),
-      channelVideoCount: $("channelVideoCount"),
-      channelLikeCount: $("channelLikeCount"),
-      channelVideos: $("channelVideos"),
-      channelNavBtn: $("channelNavBtn"),
-      backHomeBtn: $("backHomeBtn"),
-
-      searchInput: $("searchInput"),
-      searchBtn: $("searchBtn"),
-      openUploadTop: $("openUploadTop")
+      profileNameInput: $("profileNameInput"),
+      profileUsernameInput: $("profileUsernameInput"),
+      saveProfileBtn: $("saveProfileBtn"),
+      emptyState: $("emptyState"),
+      chatShell: $("chatShell"),
+      chatAvatar: $("chatAvatar"),
+      chatName: $("chatName"),
+      chatSub: $("chatSub"),
+      messages: $("messages"),
+      messageInput: $("messageInput"),
+      sendBtn: $("sendBtn"),
+      toast: $("toast")
     };
 
-    let currentUser = null;
-    let currentProfile = null;
-    let currentWatchVideo = null;
-    let videosCache = [];
-    let channelsCache = [];
+    let mode = "login";
+    let me = null;
+    let myProfile = null;
+    let usersCache = [];
+    let chatsCache = [];
+    let activeChat = null;
+    let unsubscribeMessages = null;
+    let unsubscribeChats = null;
+    let lastNotifiedMessageId = null;
 
-    function escapeHtml(str = "") {
-      return str
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    function toast(text){
+      els.toast.textContent = text;
+      els.toast.classList.add("show");
+      setTimeout(() => els.toast.classList.remove("show"), 2200);
     }
 
-    function initials(name = "U") {
+    function initials(name = "U"){
       return (name.trim()[0] || "U").toUpperCase();
     }
 
-    function formatDate(ts) {
-      const date = ts?.toDate ? ts.toDate() : new Date();
+    function escapeHtml(s = ""){
+      return s
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function fmt(ts){
+      const d = ts?.toDate ? ts.toDate() : new Date();
       return new Intl.DateTimeFormat("tr-TR", {
-        dateStyle: "medium",
-        timeStyle: "short"
-      }).format(date);
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit"
+      }).format(d);
     }
 
-    function switchPage(id) {
-      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-      const page = document.getElementById(id);
-      if (page) page.classList.add("active");
-      const btn = document.querySelector(`.nav-btn[data-page="${id}"]`);
-      if (btn) btn.classList.add("active");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    function setMode(next){
+      mode = next;
+      els.loginTab.classList.toggle("active", next === "login");
+      els.registerTab.classList.toggle("active", next === "register");
+      els.authSubmitBtn.textContent = next === "login" ? "Giriş Yap" : "Kayıt Ol";
+      els.nameInput.classList.toggle("hidden", next === "login");
+      els.usernameInput.classList.toggle("hidden", next === "login");
     }
 
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-      btn.addEventListener("click", () => switchPage(btn.dataset.page));
-    });
+    setMode("login");
+    els.loginTab.onclick = () => setMode("login");
+    els.registerTab.onclick = () => setMode("register");
 
-    els.openUploadTop.addEventListener("click", () => switchPage("uploadPage"));
-    els.backHomeBtn.addEventListener("click", () => switchPage("homePage"));
+    function normalizeUsername(v){
+      return v.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 20);
+    }
 
-    els.profileName.addEventListener("input", () => {
-      const v = els.profileName.value.trim() || "Kanal Adı";
-      els.profilePreviewName.textContent = v;
-      els.topName.textContent = v;
-    });
+    async function usernameTaken(username, exceptUid = null){
+      const q = query(collection(db, "users"), where("username", "==", username), limit(1));
+      const snap = await getDocs(q);
+      if (snap.empty) return false;
+      if (exceptUid && snap.docs[0].id === exceptUid) return false;
+      return true;
+    }
 
-    els.profileBio.addEventListener("input", () => {
-      els.profilePreviewBio.textContent = els.profileBio.value.trim() || "Açıklama yok.";
-    });
+    async function upsertUserProfile(uid, data, merge = true){
+      await setDoc(doc(db, "users", uid), data, { merge });
+    }
 
-    els.thumbFile.addEventListener("change", () => {
-      const file = els.thumbFile.files?.[0];
-      if (!file) return;
-      els.thumbPreview.src = URL.createObjectURL(file);
-      els.thumbPreview.classList.remove("hidden");
-    });
+    async function loadMyProfile(uid){
+      const snap = await getDoc(doc(db, "users", uid));
+      return snap.exists() ? snap.data() : null;
+    }
 
-    els.avatarFile.addEventListener("change", () => {
-      const file = els.avatarFile.files?.[0];
-      if (!file) return;
-      const url = URL.createObjectURL(file);
-      els.profilePreviewAvatar.src = url;
-      els.topAvatar.src = url;
-    });
+    function applyMyProfile(profile){
+      myProfile = profile;
+      els.meAvatar.textContent = initials(profile.displayName || profile.username || "U");
+      els.meName.textContent = profile.displayName || "İsimsiz";
+      els.meUsername.textContent = "@" + (profile.username || "username");
+      els.profilePreviewAvatar.textContent = initials(profile.displayName || profile.username || "U");
+      els.profileNameInput.value = profile.displayName || "";
+      els.profileUsernameInput.value = profile.username || "";
+    }
 
-    async function ensureAuth() {
+    els.authSubmitBtn.onclick = async () => {
+      const email = els.emailInput.value.trim();
+      const password = els.passwordInput.value.trim();
+      const displayName = els.nameInput.value.trim();
+      const username = normalizeUsername(els.usernameInput.value.trim());
+
       try {
-        await signInAnonymously(auth);
-      } catch (err) {
-        console.error(err);
-        els.statusText.textContent = "Auth hatası: " + err.message;
+        if (!email || !password) return toast("E-posta ve şifre gerekli");
+
+        if (mode === "register") {
+          if (!displayName) return toast("Görünen ad gerekli");
+          if (username.length < 3) return toast("Kullanıcı adı en az 3 karakter");
+          if (await usernameTaken(username)) return toast("Bu kullanıcı adı alınmış");
+
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+          await upsertUserProfile(cred.user.uid, {
+            uid: cred.user.uid,
+            email,
+            displayName,
+            username,
+            createdAt: serverTimestamp(),
+            lastSeen: serverTimestamp(),
+            notificationEnabled: false
+          }, false);
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } catch (e) {
+        console.error(e);
+        toast(e.message || "Auth hatası");
       }
-    }
+    };
+
+    els.resetBtn.onclick = async () => {
+      const email = els.emailInput.value.trim();
+      if (!email) return toast("E-posta yaz");
+      try {
+        await sendPasswordResetEmail(auth, email);
+        toast("Şifre sıfırlama maili gönderildi");
+      } catch (e) {
+        toast(e.message || "Mail gönderilemedi");
+      }
+    };
 
     onAuthStateChanged(auth, async user => {
-      if (!user) return;
-      currentUser = user;
-      els.statusText.textContent = "Bağlandı";
-      els.topUid.textContent = user.uid.slice(0, 12) + "...";
-      await loadOrCreateProfile();
-      listenVideos();
-      listenChannels();
-      await loadMyStats();
+      if (!user) {
+        me = null;
+        myProfile = null;
+        els.authScreen.classList.remove("hidden");
+        els.appScreen.classList.add("hidden");
+        return;
+      }
+
+      me = user;
+      await upsertUserProfile(user.uid, { lastSeen: serverTimestamp() });
+      const profile = await loadMyProfile(user.uid);
+      if (!profile) return toast("Profil yüklenemedi");
+
+      applyMyProfile(profile);
+      els.authScreen.classList.add("hidden");
+      els.appScreen.classList.remove("hidden");
+
+      bindUserList();
+      bindChatList();
+      requestNotificationPermission(false);
     });
 
-    async function loadOrCreateProfile() {
-      const refDoc = doc(db, "channels", currentUser.uid);
-      const snap = await getDoc(refDoc);
+    els.logoutBtn.onclick = async () => {
+      if (unsubscribeMessages) unsubscribeMessages();
+      if (unsubscribeChats) unsubscribeChats();
+      await signOut(auth);
+    };
+
+    els.saveProfileBtn.onclick = async () => {
+      const displayName = els.profileNameInput.value.trim();
+      const username = normalizeUsername(els.profileUsernameInput.value.trim());
+
+      if (!displayName) return toast("Ad boş olamaz");
+      if (username.length < 3) return toast("Kullanıcı adı kısa");
+      if (await usernameTaken(username, me.uid)) return toast("Kullanıcı adı alınmış");
+
+      await upsertUserProfile(me.uid, {
+        displayName,
+        username,
+        updatedAt: serverTimestamp()
+      });
+
+      const refreshed = await loadMyProfile(me.uid);
+      applyMyProfile(refreshed);
+      toast("Profil güncellendi");
+    };
+
+    function chatIdFor(a, b){
+      return [a, b].sort().join("__");
+    }
+
+    async function startChatWith(user){
+      const chatId = chatIdFor(me.uid, user.uid);
+      const chatRef = doc(db, "chats", chatId);
+      const snap = await getDoc(chatRef);
 
       if (!snap.exists()) {
-        const defaultName = "Kanal-" + currentUser.uid.slice(0, 6);
-        const defaultAvatar = `https://placehold.co/200x200/2b2b2b/ffffff?text=${initials(defaultName)}`;
-        const data = {
-          uid: currentUser.uid,
-          displayName: defaultName,
-          bio: "Yeni kanal",
-          avatarUrl: defaultAvatar,
-          createdAt: serverTimestamp()
-        };
-        await setDoc(refDoc, data);
-        currentProfile = data;
-      } else {
-        currentProfile = snap.data();
-      }
-
-      fillProfile(currentProfile);
-    }
-
-    function fillProfile(profile) {
-      els.profileName.value = profile.displayName || "";
-      els.profileBio.value = profile.bio || "";
-      els.profilePreviewName.textContent = profile.displayName || "Kanal Adı";
-      els.profilePreviewBio.textContent = profile.bio || "Açıklama yok.";
-      els.profilePreviewAvatar.src = profile.avatarUrl || "https://placehold.co/200x200/2b2b2b/ffffff?text=U";
-      els.topAvatar.src = profile.avatarUrl || "https://placehold.co/200x200/2b2b2b/ffffff?text=U";
-      els.topName.textContent = profile.displayName || "İsimsiz Kanal";
-    }
-
-    async function uploadFile(path, file, progressCb) {
-      const storageRef = ref(storage, path);
-      return new Promise((resolve, reject) => {
-        const task = uploadBytesResumable(storageRef, file);
-        task.on("state_changed", snap => {
-          const percent = (snap.bytesTransferred / snap.totalBytes) * 100;
-          progressCb?.(percent);
-        }, reject, async () => {
-          const url = await getDownloadURL(task.snapshot.ref);
-          resolve(url);
+        await setDoc(chatRef, {
+          chatId,
+          memberIds: [me.uid, user.uid],
+          memberProfiles: {
+            [me.uid]: { displayName: myProfile.displayName, username: myProfile.username },
+            [user.uid]: { displayName: user.displayName, username: user.username }
+          },
+          lastMessage: "",
+          lastMessageAt: serverTimestamp(),
+          lastMessageSenderId: me.uid,
+          createdAt: serverTimestamp(),
+          unreadCountMap: { [me.uid]: 0, [user.uid]: 0 }
         });
-      });
-    }
-
-    els.saveProfileBtn.addEventListener("click", async () => {
-      try {
-        const displayName = els.profileName.value.trim();
-        const bio = els.profileBio.value.trim();
-        if (!displayName) return alert("Kanal adı boş olamaz");
-
-        let avatarUrl = currentProfile?.avatarUrl || `https://placehold.co/200x200/2b2b2b/ffffff?text=${initials(displayName)}`;
-        const file = els.avatarFile.files?.[0];
-
-        if (file) {
-          avatarUrl = await uploadFile(`avatars/${currentUser.uid}/${Date.now()}_${file.name}`, file);
-        }
-
-        const data = {
-          uid: currentUser.uid,
-          displayName,
-          bio,
-          avatarUrl,
-          updatedAt: serverTimestamp()
-        };
-
-        await setDoc(doc(db, "channels", currentUser.uid), data, { merge: true });
-        currentProfile = { ...currentProfile, ...data };
-        fillProfile(currentProfile);
-        alert("Profil kaydedildi");
-      } catch (err) {
-        console.error(err);
-        alert("Profil kaydedilemedi: " + err.message);
       }
-    });
 
-    els.uploadBtn.addEventListener("click", async () => {
-      try {
-        const title = els.videoTitle.value.trim();
-        const description = els.videoDesc.value.trim();
-        const tags = els.videoTags.value.split(",").map(s => s.trim()).filter(Boolean);
-        const video = els.videoFile.files?.[0];
-        const thumb = els.thumbFile.files?.[0];
+      openChat({
+        chatId,
+        memberIds: [me.uid, user.uid],
+        memberProfiles: {
+          [me.uid]: myProfile,
+          [user.uid]: user
+        },
+        unreadCountMap: { [me.uid]: 0, [user.uid]: 0 }
+      });
+    }
 
-        if (!title) return alert("Başlık gir");
-        if (!video) return alert("Video seç");
-
-        els.uploadStatus.textContent = "Video yükleniyor...";
-        els.uploadBar.style.width = "0%";
-
-        const videoUrl = await uploadFile(
-          `videos/${currentUser.uid}/${Date.now()}_${video.name}`,
-          video,
-          percent => {
-            els.uploadBar.style.width = percent + "%";
-            els.uploadStatus.textContent = "Video yükleniyor: %" + Math.round(percent);
-          }
-        );
-
-        let thumbnailUrl = "https://placehold.co/1280x720/111111/ffffff?text=VideoTube";
-        if (thumb) {
-          els.uploadStatus.textContent = "Thumbnail yükleniyor...";
-          thumbnailUrl = await uploadFile(`thumbnails/${currentUser.uid}/${Date.now()}_${thumb.name}`, thumb);
-        }
-
-        await addDoc(collection(db, "videos"), {
-          title,
-          description,
-          tags,
-          videoUrl,
-          thumbnailUrl,
-          uid: currentUser.uid,
-          channelName: currentProfile.displayName,
-          channelAvatar: currentProfile.avatarUrl,
-          likesCount: 0,
-          commentsCount: 0,
-          createdAt: serverTimestamp()
-        });
-
-        els.videoTitle.value = "";
-        els.videoDesc.value = "";
-        els.videoTags.value = "";
-        els.videoFile.value = "";
-        els.thumbFile.value = "";
-        els.thumbPreview.classList.add("hidden");
-        els.uploadBar.style.width = "100%";
-        els.uploadStatus.textContent = "Yükleme tamamlandı";
-        await loadMyStats();
-        switchPage("allVideosPage");
-      } catch (err) {
-        console.error(err);
-        alert("Yükleme hatası: " + err.message);
-      }
-    });
-
-    function renderVideoCard(video) {
+    function renderUserItem(user){
       return `
-        <article class="video-card" data-watch-id="${video.id}">
-          <img class="thumb" src="${escapeHtml(video.thumbnailUrl || '')}" alt="">
-          <div class="video-info">
-            <img class="avatar" src="${escapeHtml(video.channelAvatar || 'https://placehold.co/100x100/2b2b2b/ffffff?text=U')}" alt="">
-            <div>
-              <div class="title">${escapeHtml(video.title || "Başlıksız")}</div>
-              <div class="small muted">${escapeHtml(video.channelName || "Kanal")}</div>
-              <div class="small muted" style="margin-top:6px;">👍 ${video.likesCount || 0} • 💬 ${video.commentsCount || 0}</div>
-            </div>
+        <div class="user-item" data-user-id="${user.uid}">
+          <div class="avatar">${escapeHtml(initials(user.displayName || user.username || "U"))}</div>
+          <div style="min-width:0;">
+            <div class="name">${escapeHtml(user.displayName || "İsimsiz")}</div>
+            <div class="preview">@${escapeHtml(user.username || "username")}</div>
           </div>
-        </article>
-      `;
-    }
-
-    function renderChannelCard(channel, stats = { videoCount: 0, likeCount: 0 }) {
-      return `
-        <article class="panel" data-channel-id="${channel.uid}" style="cursor:pointer; text-align:center;">
-          <img class="big-avatar" style="width:86px;height:86px;" src="${escapeHtml(channel.avatarUrl || '')}" alt="">
-          <div style="font-weight:800; margin-top:10px;">${escapeHtml(channel.displayName || "Kanal")}</div>
-          <div class="small muted" style="margin-top:6px;">${escapeHtml(channel.bio || "Açıklama yok")}</div>
-          <div class="small muted" style="margin-top:10px;">🎬 ${stats.videoCount} • 👍 ${stats.likeCount}</div>
-        </article>
-      `;
-    }
-
-    function bindVideoClicks() {
-      document.querySelectorAll("[data-watch-id]").forEach(el => {
-        el.onclick = () => {
-          const id = el.getAttribute("data-watch-id");
-          const found = videosCache.find(v => v.id === id);
-          if (found) openVideo(found);
-        };
-      });
-    }
-
-    function bindChannelClicks() {
-      document.querySelectorAll("[data-channel-id]").forEach(el => {
-        el.onclick = () => {
-          const uid = el.getAttribute("data-channel-id");
-          openChannel(uid);
-        };
-      });
-    }
-
-    function listenVideos() {
-      const qy = query(collection(db, "videos"), orderBy("createdAt", "desc"));
-      onSnapshot(qy, snap => {
-        videosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderVideoLists(videosCache);
-        loadMyStats();
-      }, err => {
-        console.error(err);
-        els.statusText.textContent = "Video index/rules hatası olabilir";
-      });
-    }
-
-    function listenChannels() {
-      const qy = query(collection(db, "channels"), limit(30));
-      onSnapshot(qy, async snap => {
-        channelsCache = snap.docs.map(d => d.data());
-        await renderChannelLists(channelsCache);
-      });
-    }
-
-    async function getChannelStats(uid) {
-      const qy = query(collection(db, "videos"), where("uid", "==", uid));
-      const snap = await getDocs(qy);
-      const list = snap.docs.map(d => d.data());
-      return {
-        videoCount: list.length,
-        likeCount: list.reduce((a, b) => a + (b.likesCount || 0), 0)
-      };
-    }
-
-    function renderVideoLists(list) {
-      const html = list.length ? list.map(renderVideoCard).join("") : `<div class="empty">Henüz video yok.</div>`;
-      els.allVideosGrid.innerHTML = html;
-      els.homeVideos.innerHTML = list.slice(0, 6).length ? list.slice(0, 6).map(renderVideoCard).join("") : `<div class="empty">Henüz video yok.</div>`;
-      els.sideVideos.innerHTML = list.slice(0, 8).map(v => `
-        <div class="mini" data-watch-id="${v.id}">
-          <img src="${escapeHtml(v.thumbnailUrl || '')}" alt="">
-          <div>
-            <div style="font-weight:700; line-height:1.35;">${escapeHtml(v.title || "")}</div>
-            <div class="small muted" style="margin-top:4px;">${escapeHtml(v.channelName || "")}</div>
-            <div class="small muted">👍 ${v.likesCount || 0}</div>
-          </div>
+          <div class="pill">Sohbet</div>
         </div>
-      `).join("") || `<div class="empty">Video yok.</div>`;
-      bindVideoClicks();
+      `;
     }
 
-    async function renderChannelLists(list) {
-      if (!list.length) {
-        els.channelsGrid.innerHTML = `<div class="empty">Henüz kanal yok.</div>`;
-        els.homeChannels.innerHTML = `<div class="empty">Henüz kanal yok.</div>`;
-        return;
-      }
-
-      const statsEntries = await Promise.all(list.map(async ch => {
-        const st = await getChannelStats(ch.uid);
-        return [ch.uid, st];
-      }));
-      const statsMap = Object.fromEntries(statsEntries);
-
-      els.channelsGrid.innerHTML = list.map(ch => renderChannelCard(ch, statsMap[ch.uid])).join("");
-      els.homeChannels.innerHTML = list.slice(0, 6).map(ch => renderChannelCard(ch, statsMap[ch.uid])).join("");
-      bindChannelClicks();
-    }
-
-    async function loadMyStats() {
-      if (!currentUser) return;
-      const stats = await getChannelStats(currentUser.uid);
-      els.myVideoCount.textContent = stats.videoCount;
-      els.myLikeCount.textContent = stats.likeCount;
-    }
-
-    function openVideo(video) {
-      currentWatchVideo = video;
-      els.watchEmpty.classList.add("hidden");
-      els.watchWrap.classList.remove("hidden");
-      els.watchVideo.src = video.videoUrl || "";
-      els.watchTitle.textContent = video.title || "Başlıksız";
-      els.watchChannel.textContent = video.channelName || "Kanal";
-      els.watchDate.textContent = formatDate(video.createdAt);
-      els.watchLikes.textContent = (video.likesCount || 0) + " beğeni";
-      els.watchDesc.textContent = video.description || "Açıklama yok.";
-      switchPage("watchPage");
-      loadComments(video.id);
-    }
-
-    function loadComments(videoId) {
-      const qy = query(collection(db, "videos", videoId, "comments"), orderBy("createdAt", "desc"));
-      onSnapshot(qy, snap => {
-        const items = snap.docs.map(d => d.data());
-        els.commentList.innerHTML = items.length ? items.map(c => `
-          <div class="comment">
-            <img class="avatar" src="${escapeHtml(c.authorAvatar || 'https://placehold.co/100x100/2b2b2b/ffffff?text=U')}" alt="">
-            <div>
-              <div style="font-weight:700;">${escapeHtml(c.authorName || "Kullanıcı")}</div>
-              <div class="small muted">${formatDate(c.createdAt)}</div>
-              <div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(c.text || "")}</div>
-            </div>
-          </div>
-        `).join("") : `<div class="empty" style="margin-top:10px;">Henüz yorum yok.</div>`;
+    function bindUserList(){
+      const q = query(collection(db, "users"), orderBy("displayName"));
+      onSnapshot(q, snap => {
+        usersCache = snap.docs.map(d => d.data()).filter(u => u.uid !== me.uid);
+        renderUserList(usersCache);
       });
     }
 
-    els.sendCommentBtn.addEventListener("click", async () => {
-      try {
-        if (!currentWatchVideo) return alert("Önce video aç");
-        const text = els.commentInput.value.trim();
-        if (!text) return alert("Yorum boş olamaz");
+    function renderUserList(users){
+      const term = els.searchUserInput.value.trim().toLowerCase();
+      const filtered = users.filter(u => !term || [u.displayName, u.username, u.email].join(" ").toLowerCase().includes(term));
 
-        await addDoc(collection(db, "videos", currentWatchVideo.id, "comments"), {
-          uid: currentUser.uid,
-          authorName: currentProfile.displayName,
-          authorAvatar: currentProfile.avatarUrl,
-          text,
-          createdAt: serverTimestamp()
-        });
+      els.userList.innerHTML = filtered.length
+        ? filtered.map(renderUserItem).join("")
+        : `<div class="section-head" style="text-transform:none;letter-spacing:0;color:var(--muted)">Kullanıcı bulunamadı</div>`;
 
-        await updateDoc(doc(db, "videos", currentWatchVideo.id), {
-          commentsCount: increment(1)
-        });
-
-        els.commentInput.value = "";
-      } catch (err) {
-        console.error(err);
-        alert("Yorum atılamadı: " + err.message);
-      }
-    });
-
-    els.likeBtn.addEventListener("click", async () => {
-      try {
-        if (!currentWatchVideo) return alert("Önce video aç");
-
-        const likeRef = doc(db, "videos", currentWatchVideo.id, "likes", currentUser.uid);
-        const likeSnap = await getDoc(likeRef);
-
-        if (likeSnap.exists()) return alert("Bu videoya zaten like attın");
-
-        await setDoc(likeRef, {
-          uid: currentUser.uid,
-          createdAt: serverTimestamp()
-        });
-
-        await updateDoc(doc(db, "videos", currentWatchVideo.id), {
-          likesCount: increment(1)
-        });
-      } catch (err) {
-        console.error(err);
-        alert("Like atılamadı: " + err.message);
-      }
-    });
-
-    els.openChannelBtn.addEventListener("click", () => {
-      if (currentWatchVideo) openChannel(currentWatchVideo.uid);
-    });
-
-    async function openChannel(uid) {
-      const snap = await getDoc(doc(db, "channels", uid));
-      if (!snap.exists()) return alert("Kanal bulunamadı");
-
-      const channel = snap.data();
-      const qy = query(collection(db, "videos"), where("uid", "==", uid));
-      const videoSnap = await getDocs(qy);
-      const videos = videoSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const likeSum = videos.reduce((a, b) => a + (b.likesCount || 0), 0);
-
-      els.channelAvatar.src = channel.avatarUrl || "https://placehold.co/200x200/2b2b2b/ffffff?text=C";
-      els.channelName.textContent = channel.displayName || "Kanal";
-      els.channelBio.textContent = channel.bio || "Açıklama yok";
-      els.channelVideoCount.textContent = videos.length;
-      els.channelLikeCount.textContent = likeSum;
-      els.channelVideos.innerHTML = videos.length ? videos.map(renderVideoCard).join("") : `<div class="empty">Bu kanalda video yok.</div>`;
-      bindVideoClicks();
-      els.channelNavBtn.classList.remove("hidden");
-      switchPage("channelPage");
+      document.querySelectorAll(".user-item").forEach(node => {
+        node.onclick = () => {
+          const user = usersCache.find(u => u.uid === node.dataset.userId);
+          if (user) startChatWith(user);
+        };
+      });
     }
 
-    function runSearch() {
-      const term = els.searchInput.value.trim().toLowerCase();
-      if (!term) {
-        renderVideoLists(videosCache);
-        renderChannelLists(channelsCache);
-        switchPage("allVideosPage");
-        return;
-      }
+    els.searchUserInput.oninput = () => renderUserList(usersCache);
 
-      const filteredVideos = videosCache.filter(v =>
-        [v.title, v.description, v.channelName, ...(v.tags || [])].join(" ").toLowerCase().includes(term)
-      );
-
-      const filteredChannels = channelsCache.filter(c =>
-        [c.displayName, c.bio].join(" ").toLowerCase().includes(term)
-      );
-
-      els.allVideosGrid.innerHTML = filteredVideos.length ? filteredVideos.map(renderVideoCard).join("") : `<div class="empty">Video bulunamadı.</div>`;
-      els.channelsGrid.innerHTML = filteredChannels.length ? filteredChannels.map(c => {
-        const count = videosCache.filter(v => v.uid === c.uid).length;
-        const likes = videosCache.filter(v => v.uid === c.uid).reduce((s, v) => s + (v.likesCount || 0), 0);
-        return renderChannelCard(c, { videoCount: count, likeCount: likes });
-      }).join("") : `<div class="empty">Kanal bulunamadı.</div>`;
-
-      bindVideoClicks();
-      bindChannelClicks();
-      switchPage("allVideosPage");
+    function bindChatList(){
+      const q = query(collection(db, "chats"), orderBy("lastMessageAt", "desc"));
+      unsubscribeChats = onSnapshot(q, snap => {
+        chatsCache = snap.docs.map(d => d.data()).filter(chat =>
+          Array.isArray(chat.memberIds) && chat.memberIds.includes(me.uid)
+        );
+        renderChatList();
+      });
     }
 
-    els.searchBtn.addEventListener("click", runSearch);
-    els.searchInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") runSearch();
+    function otherUserFromChat(chat){
+      const otherId = chat.memberIds.find(id => id !== me.uid);
+      const otherProfile =
+        chat.memberProfiles?.[otherId] ||
+        usersCache.find(u => u.uid === otherId) ||
+        { uid: otherId, displayName: "Kullanıcı", username: "username" };
+
+      return { otherId, ...otherProfile };
+    }
+
+    function renderChatList(){
+      els.chatList.innerHTML = chatsCache.length
+        ? chatsCache.map(chat => {
+            const other = otherUserFromChat(chat);
+            const unread = chat.unreadCountMap?.[me.uid] || 0;
+            const active = activeChat?.chatId === chat.chatId;
+
+            return `
+              <div class="chat-item ${active ? "active" : ""}" data-chat-id="${chat.chatId}">
+                <div class="avatar">${escapeHtml(initials(other.displayName || other.username || "U"))}</div>
+                <div style="min-width:0;">
+                  <div class="name">${escapeHtml(other.displayName || "Kullanıcı")}</div>
+                  <div class="preview">${escapeHtml(chat.lastMessage || ("@" + (other.username || "username")))}</div>
+                </div>
+                ${unread ? `<div class="count">${unread}</div>` : `<div class="muted" style="font-size:12px;">${chat.lastMessageAt ? fmt(chat.lastMessageAt).split(" ")[1] : ""}</div>`}
+              </div>
+            `;
+          }).join("")
+        : `<div class="section-head" style="text-transform:none;letter-spacing:0;color:var(--muted)">Henüz sohbet yok</div>`;
+
+      document.querySelectorAll(".chat-item").forEach(node => {
+        node.onclick = () => {
+          const chat = chatsCache.find(c => c.chatId === node.dataset.chatId);
+          if (chat) openChat(chat);
+        };
+      });
+    }
+
+    async function openChat(chat){
+      activeChat = chat;
+      els.emptyState.classList.add("hidden");
+      els.chatShell.classList.remove("hidden");
+
+      const other = otherUserFromChat(chat);
+      els.chatAvatar.textContent = initials(other.displayName || other.username || "U");
+      els.chatName.textContent = other.displayName || "Kullanıcı";
+      els.chatSub.textContent = "@" + (other.username || "username");
+      renderChatList();
+
+      await updateDoc(doc(db, "chats", chat.chatId), {
+        [`unreadCountMap.${me.uid}`]: 0
+      }).catch(() => {});
+
+      if (unsubscribeMessages) unsubscribeMessages();
+
+      const q = query(collection(db, "chats", chat.chatId, "messages"), orderBy("createdAt"));
+      unsubscribeMessages = onSnapshot(q, snap => {
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderMessages(docs);
+
+        const newest = docs[docs.length - 1];
+        if (newest && newest.senderId !== me.uid && newest.id !== lastNotifiedMessageId) {
+          maybeNotify(other.displayName || other.username || "Yeni mesaj", newest.text || "");
+          lastNotifiedMessageId = newest.id;
+        }
+      });
+    }
+
+    function renderMessages(messages){
+      els.messages.innerHTML = messages.length
+        ? messages.map(msg => `
+            <div class="bubble ${msg.senderId === me.uid ? "me" : "other"}">
+              <div>${escapeHtml(msg.text || "")}</div>
+              <div class="meta">${fmt(msg.createdAt)}</div>
+            </div>
+          `).join("")
+        : `<div class="empty-card" style="margin:auto">Henüz mesaj yok. İlk mesajı sen at.</div>`;
+
+      els.messages.scrollTop = els.messages.scrollHeight;
+    }
+
+    async function sendMessage(){
+      const text = els.messageInput.value.trim();
+      if (!text || !activeChat) return;
+
+      const other = otherUserFromChat(activeChat);
+      const chatRef = doc(db, "chats", activeChat.chatId);
+      const msgRef = collection(db, "chats", activeChat.chatId, "messages");
+
+      await addDoc(msgRef, {
+        text,
+        senderId: me.uid,
+        senderName: myProfile.displayName,
+        createdAt: serverTimestamp()
+      });
+
+      await updateDoc(chatRef, {
+        lastMessage: text,
+        lastMessageAt: serverTimestamp(),
+        lastMessageSenderId: me.uid,
+        [`unreadCountMap.${other.otherId}`]: increment(1),
+        [`unreadCountMap.${me.uid}`]: 0
+      });
+
+      els.messageInput.value = "";
+      els.messageInput.style.height = "56px";
+    }
+
+    els.sendBtn.onclick = sendMessage;
+
+    els.messageInput.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
     });
 
-    ensureAuth();
+    els.messageInput.addEventListener("input", () => {
+      els.messageInput.style.height = "56px";
+      els.messageInput.style.height = Math.min(els.messageInput.scrollHeight, 160) + "px";
+    });
+
+    async function requestNotificationPermission(showToast = true){
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "granted") return;
+      if (Notification.permission === "denied") return showToast && toast("Bildirim izni reddedilmiş");
+
+      const result = await Notification.requestPermission();
+      if (result === "granted") {
+        await upsertUserProfile(me.uid, { notificationEnabled: true });
+        showToast && toast("Bildirimler açıldı");
+      }
+    }
+
+    function maybeNotify(title, body){
+      if (!document.hidden) return;
+      if (!("Notification" in window)) return;
+      if (Notification.permission !== "granted") return;
+      new Notification(title, { body, tag: "chat-message" });
+    }
+
+    els.notifBtn.onclick = () => requestNotificationPermission(true);
   </script>
 </body>
 </html>
